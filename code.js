@@ -1,130 +1,105 @@
-let MAX_NUMBER_OF_CIRCLES=800;
-let maxRadius=7;
-let minRadius=2;
-let greaterMaxRadius=40;
-let maxSpeed=4;
-let colorsArray = ['#F6F792', '#333745', '#77C4D3', '#DAEDE2', '#EA2E49'];
-let canvas=document.getElementById("myCan");
-let button=document.getElementById("myButton");
-let c=canvas.getContext("2d");
-let myCircles=[];
-let myLet;
+//variables
+let numberOfBalls = 500;
+let minRadius=8;
+let maxRadius=25;
+let friction = 0.8;
+let gravity = 1;
+let canvas = document.getElementById('myCanvas');
+let c = canvas.getContext('2d');
+let ballsArray=[];
+let colorsArray=['#324D5C', '#14B278', '#F0CA4D', '#E37B40', '#ED3752'];
 
-let mouse={
-  x: undefined,
-  y: undefined
-}
-
-class Circle {
-  constructor(x, y, dx, dy, radius) {
+//objects
+class Ball {
+  constructor(x, y, dx, dy, radius, color) {
     this.x=x;
     this.y=y;
     this.dx=dx;
     this.dy=dy;
     this.radius=radius;
-    this.minRadius= radius;
-    this.color = colorsArray[Math.floor(Math.random()*colorsArray.length)];
+    this.color=color;
   }
 
-  draw() {
+  draw(){
     c.beginPath();
     c.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-    c.fillStyle=this.color;
+    c.fillStyle = this.color;
     c.fill();
+    c.stroke();
   }
 
-  update() {
-    if((this.x+this.radius)>window.innerWidth || (this.x-this.radius)<0)
+  update(){
+    if(this.y+this.radius+this.dy>canvas.height){
+      this.dy=-this.dy * friction;
+    }else{
+      this.dy+=gravity;
+    }
+
+    if(this.x+this.radius+this.dx>canvas.width || this.x-this.radius<0){
       this.dx=-this.dx;
-    if((this.y+this.radius)>window.innerHeight || (this.y-this.radius)<0)
-      this.dy=-this.dy;
-
-    this.x+=this.dx;
+    }
     this.y+=this.dy;
-
-    if(mouse.x-this.x < 50 && mouse.x-this.x > -50
-      && mouse.y-this.y < 50 && mouse.y-this.y > -50){
-        if(this.radius<greaterMaxRadius) this.radius++;
-      }else {
-        if(this.radius>this.minRadius)this.radius--;
-      }
-
+    this.x+=this.dx;
     this.draw();
   }
+
 }
 
-window.addEventListener("resize", function() {
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  c.clearRect(0,0,window.innerWidth, window.innerHeight);
-  myCircles=[];
-  makeCircles(MAX_NUMBER_OF_CIRCLES);
-});
+//functions
+function randomIntFromRange(a, b) {
+  return Math.floor(Math.random() * (b-a)) + a;
+}
 
-window.addEventListener("mousemove", function(e) {
-  mouse.x=e.x;
-  mouse.y=e.y;
-});
+function randomElementOfArray(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
 
-function makeCircles(numberOfCircles) {
-  let x, y, dx, dy, radius;
-  for(let i=0; i<numberOfCircles; i++){
-    radius= Math.floor(Math.random()*(maxRadius-minRadius)+minRadius);
-    x=Math.floor(Math.random()*(window.innerWidth - radius*2)+radius);
-    y=Math.floor(Math.random()*(window.innerHeight - radius*2)+radius);
-    dx=(Math.random()-0.5)*maxSpeed;
-    dy=(Math.random()-0.5)*maxSpeed;
-    if(dx<1 && dx>-1) dx+=1;
-    if(dy<1 && dy>-1) dy+=1;
-    myCircles.push(new Circle(x, y, dx, dy, radius));
+function areBallsDown() {
+  for (var i = 0; i < ballsArray.length; i++) {
+    if((ballsArray[i].y+ballsArray[i].radius+ballsArray[i].dy) < canvas.height) return false;
   }
-  if(myCircles.length>=MAX_NUMBER_OF_CIRCLES)
-    clearInterval(myLet);
+  return true;
+}
+
+function init() {
+  ballsArray=[];
+  let x, y, dx, dy, radius, color;
+  for (let i = 0; i < numberOfBalls; i++) {
+    radius = randomIntFromRange(minRadius, maxRadius);
+    x=randomIntFromRange(radius, (canvas.width-radius));
+    y=randomIntFromRange(0, (canvas.height-radius));
+    dx=randomIntFromRange(-5, 5);
+    dy=randomIntFromRange(0, 4);
+    color=randomElementOfArray(colorsArray);
+    ballsArray.push(new Ball(x, y, dx, dy, radius, color));
+  }
 }
 
 function animate() {
   requestAnimationFrame(animate);
-  c.clearRect(0,0,window.innerWidth, window.innerHeight);
-  for(let i=0; i<myCircles.length; i++)
-    myCircles[i].update();
-}
-
-function stopCircles() {
-  for(let i=0; i<myCircles.length; i++){
-    myCircles[i].dx=0;
-    myCircles[i].dy=0;
+  c.clearRect(0,0,canvas.width, canvas.height);
+  for (let i = 0; i < ballsArray.length; i++) {
+    ballsArray[i].update();
+  }
+  if(areBallsDown()){
+    c.fillStyle='black';
+    c.font='36px Arial';
+    c.fillText("Click to see it again", (canvas.width)/9, (canvas.height*3)/4);
   }
 }
+//script
+window.onload=function() {
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  init();
+  animate();
+};
 
-function moveCircles() {
-  for(let i=0; i<myCircles.length; i++){
-    myCircles[i].dx=Math.floor((Math.random()-0.5)*5);
-    myCircles[i].dy=Math.floor((Math.random()-0.5)*5);
-    if(myCircles[i].dx===0) myCircles[i].dx+=1;
-    if(myCircles[i].dy===0) myCircles[i].dy+=1;
-  }
-}
+//event listeners
+addEventListener("resize", function() {
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  init();
+});
 
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-
-window.onload=start;
-animate();
-
-function start() {
-  myLet=setInterval(makeCircles, 100, 20);
-}
-
-// function start() {
-//   moveCircles();
-//   button.innerHTML="Stop this madness!";
-//   myLet=setInterval(makeCircles, 100, 1);
-//   button.onclick=stop;
-// }
-//
-// function stop() {
-//   clearInterval(myLet);
-//   stopCircles();
-//   button.innerHTML="Continue the madness";
-//   button.onclick=start;
-// }
+addEventListener("click", init);
