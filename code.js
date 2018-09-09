@@ -103,3 +103,4 @@ addEventListener("resize", function() {
 });
 
 addEventListener("click", init);
+addEventListener("touchstart", init);
