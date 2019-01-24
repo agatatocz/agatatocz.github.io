@@ -1,2 +1,3 @@
 # agatatocz.github.io
-I made this to learn how to use github pages. Please, dont't judge me.
+My small HTML canvas project.
+I put this here to learn how to use github pages.
